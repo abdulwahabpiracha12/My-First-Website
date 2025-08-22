@@ -12,8 +12,9 @@
     .product { background: white; border: 1px solid #dddddd; padding: 15px; border-radius: 10px; text-align: center; }
     .product img { width: 100%; height: 220px; object-fit: cover; }
     button { background: black; color: #fff; padding: 10px; border: none; cursor: pointer; border-radius: 5px; margin-top: 10px; }
-    .cart, .checkout { background: #fff; padding: 20px; display: none; position: fixed; top: 10%; left: 20%; width: 60%; border: 2px solid black; border-radius: 10px; z-index: 999; }
+    .cart, .checkout, .thankyou { background: #fff; padding: 20px; display: none; position: fixed; top: 10%; left: 20%; width: 60%; border: 2px solid black; border-radius: 10px; z-index: 999; }
     .checkout input, .checkout textarea, .checkout select { width: 100%; padding: 10px; margin: 5px 0; }
+    #timer { font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -26,12 +27,12 @@
 
   <section class="hero">
      <p>Orimono the choice of 25 million people</p>
+     <p id="timer"></p>
   </section>  
 
-  <section class="products" id="product-list">
-    <!-- Products will load from JS -->
-  </section> 
+  <section class="products" id="product-list"></section> 
 
+  <!-- Cart Popup -->
   <div id="cart" class="cart">
     <h2>Your Cart</h2>
     <ul id="cart-items"></ul>
@@ -42,7 +43,7 @@
   <!-- Checkout Form -->  
   <div id="checkout-form" class="checkout">
     <h2>Checkout</h2>
-    <form name="orderForm" method="POST" data-netlify="true" enctype="multipart/form-data">
+    <form id="orderForm" onsubmit="return handleSubmit(event)">
       <label>Full Name:</label>
       <input type="text" name="name" required>
 
@@ -79,14 +80,46 @@
     </form>
   </div>  
 
+  <!-- Thank You Message -->
+  <div id="thankyou" class="thankyou">
+    <h2>✅ Thank You!</h2>
+    <p>Your order has been placed successfully. We’ll contact you soon.</p>
+  </div>
+
   <footer>
     <p>© 2025 My Shop. All Rights Reserved.</p>
     <p>For placing order contact on my gmail
       abdulwahabpiracha15@gmail.com</p>
   </footer>  
 
+  <!-- EmailJS script -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script>
-    // ✅ Manual Product List (25 slots ready)
+    (function() {
+      // ⚡ Already initialized with demo keys (replace with real ones when ready)
+      emailjs.init("QxUqW6mOD7kQyEXAMPLE"); 
+    })();
+
+    function handleSubmit(event) {
+      event.preventDefault();
+      let form = event.target;
+
+      // Ensure cart details are sent
+      document.getElementById("order-details").value = JSON.stringify(cart, null, 2);
+
+      // Send email via EmailJS
+      emailjs.sendForm("service_orimono", "template_order", form)
+        .then(() => {
+          document.getElementById("checkout-form").style.display = "none";
+          document.getElementById("thankyou").style.display = "block";
+        }, (error) => {
+          alert("Failed to send order: " + JSON.stringify(error));
+        });
+
+      return false;
+    }
+
+    // ------------------ Your Existing Script ------------------
     let products = [
       { name: "Flamingo", price: 800, img : "Flamingo.jpeg" },
       { name: "Cart", price: 1650, img: "Cart.jpeg" },
@@ -147,6 +180,7 @@
       document.getElementById("order-details").value = JSON.stringify(cart);
     }
 
+    // Show Easypaisa details only when selected
     document.getElementById("cust-payment").addEventListener("change", function() {
       if (this.value === "Easypaisa") {
         document.getElementById("easypaisa-info").style.display = "block";
@@ -155,6 +189,7 @@
       }
     });
 
+    // Countdown Timer
     function startTimer() {
       let countdownDate = new Date().getTime() + 3600000;
       let timer = setInterval(function () {
